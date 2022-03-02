@@ -22,7 +22,7 @@ def voronoi(points, size):
 
 def voronoi_map(vor, size):
     # calculate voronoi map
-    vor_map = np.zeros((size, size), dype=np.uint32)
+    vor_map = np.zeros((size, size), dtype=np.uint32)
     for i, region in enumerate(vor.regions):
         # skip empty regions and infinite ridge regions
         if len(region) == 0 or -1 in region:
