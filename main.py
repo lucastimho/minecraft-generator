@@ -1,3 +1,5 @@
+from scipy.ndimage.morphology import binary_dilation
+from scipy.ndimage.filters import gaussian_filter
 from scipy.interpolate import interp1d
 from scipy import ndimage
 from skimage import exposure
@@ -469,3 +471,22 @@ biome_height_maps = [
     # boreal
     filter_map(height_map, smooth_height_map, 0.8, 0.1, 0.9, 0.05, 0.05, 0.1)
 ]
+
+
+biome_count = len(biome_names)
+biome_masks = np.zeros((biome_count, size, size))
+
+for i in range(biome_count):
+    biome_masks[i, biome_map == i] = 1
+    biome_masks[i] = gaussian_filter(biome_masks[i], sigma=16)
+
+# remove ocean from masks
+blurred_land_mask = land_mask
+blurred_land_mask = binary_dilation(
+    land_mask, iterations=32).astype(np.float64)
+blurred_land_mask = gaussian_filter(blurred_land_mask, sigma=16)
+
+biome_masks = biome_masks*blurred_land_mask
+
+plt.figure(dpi=150, figsize=(5, 5))
+plt.imshow(biome_masks[6], cmap="gray")
