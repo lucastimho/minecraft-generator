@@ -163,3 +163,61 @@ axes[1].set_yticklabels([1, 0.5, 0, -0.5, -1])
 
 temperature_map = uniform_temperature_map
 precipitation_map = uniform_precipitation_map
+
+
+def average_cells(vor, data):
+    size = vor.shape[0]
+    count = np.max(vor)+1
+
+    sum_ = np.zers(count)
+    count = np.zeros(count)
+
+    for i in range(size):
+        for j in range(size):
+            p = vor[i, j]
+            count[p] += 1
+            sum_[p] += data[i, j]
+
+    average = sum_/count
+    return np.average
+
+
+def fill_cells(vor, data):
+    size = vor.shape[0]
+    image = np.zeros((size, size))
+
+    for i in range(size):
+        for j in range(size):
+            p = vor[i, j]
+            image[i, j] = data[p]
+
+    return image
+
+
+def color_cells(vor, data, dtype=int):
+    size = vor.shape[0]
+    image = np.zeros((size, size, 3))
+
+    for i in range(size):
+        for j in range(size):
+            p = vor[i, j]
+            image[i, j] = data[p]
+
+    return image.astype(dtype)
+
+
+temperature_cells = average_cells(vor_map, temperature_map)
+precipitation_cells = average_cells(vor_map, precipitation_map)
+
+temperature_map = fill_cells(vor_map, temperature_map)
+precipitation_map = fill_cells(vor_map, precipitation_map)
+
+fig, ax = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(8, 4)
+
+ax[0].imshow(temperature_map, cmap="rainbow")
+ax[0].set_title("Temperature")
+
+ax[1].imshow(precipitation_map, cmap="Blues")
+ax[1].set_title("Precipitation")
