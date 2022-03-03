@@ -511,3 +511,52 @@ ax[0].set_title("Before")
 
 ax[1].imshow(new_biome_height_map[0])
 ax[1].set_title("After")
+
+
+def get_boundary(vor_map, kernel=1):
+    boundary_map = np.zeros_like(vor_map, dtype=bool)
+    n, m = vor_map.shape
+
+    def clip(x): return max(0, min(size-1, x))
+
+    def check_for_mult(a):
+        b = a[0]
+        for i in range(len(a) - 1):
+            if a[i] != b:
+                return 1
+        return 0
+
+    for i in range(n):
+        for j in range(m):
+            boundary_map[i, j] = check_for_mult(vor_map[
+                clip(i-kernel):clip(i+kernel+1),
+                clip(j-kernel):clip(j+kernel+1)
+            ].flatten())
+
+    return boundary_map
+
+
+biome_bound = get_boundary(biome_map, kernel=5)
+cell_bound = get_boundary(vor_map, kernel=2)
+
+river_mask = noise_map(size, 4, 4353, octaves=6,
+                       persistence=0.5, lacunarity=2) > 0
+
+new_biome_bound = biome_bound * (adjusted_height_map < 0.5)*land_mask
+new_cell_bound = cell_bound * (adjusted_height_map < 0.05)*land_mask
+
+rivers = np.logical_or(new_biome_bound, new_cell_bound)*river_mask
+
+loose_river_mask = binary_dilation(rivers, iterations=8)
+rivers_height = gaussian_filter(
+    rivers.astype(np.float64), sigma=2)*loose_river_mask
+
+adjusted_height_river_map = adjusted_height_map*(1-rivers_height) - 0.05*rivers
+
+river_land_mask = adjusted_height_river_map >= 0
+land_mask_color = np.repeat(river_land_mask[:, :, np.newaxis], 3, axis=-1)
+rivers_biome_color_map = land_mask_color * \
+    biome_color_map + (1-land_mask_color) * sea_color
+
+plt.figure(dpi=150, figsize=(5, 5))
+plt.imshow(rivers_biome_color_map)
