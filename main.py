@@ -61,3 +61,26 @@ def noise_map(size, res, seed, octaves=1, persistence=0.5, lacunarity=2.0):
         for x in range(size)]
         for y in range(size)
     ])
+
+
+boundary_displacement = 8
+boundary_noise = np.dstack(
+    [noise_map(size, 32, 200, octaves=8), noise_map(size, 32, 250, octaves=8)])
+boundary_noise = np.indices((size, size)).T + \
+    boundary_displacement*boundary_noise
+boundary_noise = boundary_noise.clip(0, size-1).astype(np.uint32)
+
+blurred_vor_map = np.zeros_like(vor_map)
+
+for x in range(size):
+    for y in range(size):
+        j, i = boundary_noise[x, y]
+        blurred_vor_map[x, y] = vor_map[i, j]
+
+fig, axes = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(8, 4)
+axes[0].imshow(vor_map)
+axes[1].imshow(blurred_vor_map)
+
+vor_map = blurred_vor_map
