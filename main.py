@@ -277,3 +277,16 @@ biomes = np.flip(biomes, axis=0).T
 fig = plt.figure(dpi=150, figsize=(4, 4))
 plt.imshow(biomes)
 plt.title("Temperature-Precipitation graph")
+
+n = len(temperature_cells)
+biome_cells = np.zeros(n, dtype=np.uint32)
+
+for i in range(n):
+    temp, precip = temperature_cells[i], precipitation_cells[i]
+    biome_cells[i] = biomes[temp, precip]
+
+biome_map = fill_cells(vor_map, biome_cells).astype(np.uint32)
+biome_color_map = color_cells(biome_map, biome_colors)
+
+fig = plt.figure(figsize=(5, 5), dpi=150)
+plt.imshow(biome_color_map)
