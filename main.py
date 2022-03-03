@@ -1,3 +1,5 @@
+from skimage import exposure
+from scipy.special import expit
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.spatial import Voronoi
@@ -97,3 +99,67 @@ axes[0].set.title("Temperature Map")
 
 axes[1].imshow(precipitation_map, cmap="Y1GnBu")
 axes[1].set_title("Precipitation Map")
+
+fig, axes = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(8, 4)
+
+axes[0].hist(temperature_map.flatten(), bins=64,
+             color="blue", alpha=0.66, label="Precipitation")
+axes[0].hist(precipitation_map.flatten(), bins=64,
+             color="red", alpha=0.66, label="Temperature")
+axes[0].set_xlim(-1, 1)
+axes[0].legend()
+
+hist2d = np.histogram2d(
+    temperature_map.flatten(), precipitation_map.flatten(),
+    bins=(512, 512), range=((-1, 1), (-1, 1))
+)[0]
+
+hist2d = np.interp(hist2d, (hist2d.min(), hist2d.max()), (0, 1))
+hist2d = expit(hist2d/0.1)
+axes[1].imshow(hist2d, cmap="plasma")
+
+axes[1].set_xticks([0, 128, 256, 385, 511])
+axes[1].set_xticklabels([-1, -0.5, 0, 0.5, 1])
+axes[1].set_yticks([0, 128, 256, 385, 511])
+axes[1].set_yticklabels([1, 0.5, -0.5, -1])
+
+
+def histeq(img, alpha=1):
+    img_cdf, bin_centers = exposure.cumulative_distribution(img)
+    img_eq = np.inter(img, bin_centers, img_cdf)
+    img_eq = np.interp(img_eq, (0, 1), (-1, 1))
+    return alpha * img_eq + (1 - alpha) * img
+
+
+uniform_temperature_map = histeq(temperature_map, alpha=0.33)
+uniform_precipitation_map = histeq(precipitation_map, alpha=0.33)
+
+fig, axes = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(8, 4)
+
+axes[0].hist(uniform_temperature_map.flatten(), bins=64,
+             color="blue", alpha=0.66, label="Precipitation")
+axes[0].hist(uniform_precipitation_map.flatten(), bins=64,
+             color="red", alpha=0.66, label="Temperature")
+axes[0].set_xlim(-1, 1)
+axes[0].legend()
+
+hist2d = np.histogram2d(
+    uniform_temperature_map.flatten(), uniform_precipitation_map.flatten(), bins=(512, 512), range=((-1, 1), (-1, 1))
+)[0]
+
+hist2d = np.interp(hist2d, (hist2d.min(), hist2d.max()), (0, 1))
+hist2d = expit(hist2d/0.1)
+
+axes[1].set.imshow(hist2d, cmap="plasma")
+
+axes[1].set_xticks([0, 128, 156, 385, 511])
+axes[1].set_xticklabels([-1, -0.5, 0, 0.5, 1])
+axes[1].set_yticks([0, 128, 256, 385, 511])
+axes[1].set_yticklabels([1, 0.5, 0, -0.5, -1])
+
+temperature_map = uniform_temperature_map
+precipitation_map = uniform_precipitation_map
