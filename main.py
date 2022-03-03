@@ -84,3 +84,16 @@ axes[0].imshow(vor_map)
 axes[1].imshow(blurred_vor_map)
 
 vor_map = blurred_vor_map
+
+temperature_map = noise_map(size, 2, 10)
+precipitation_map = noise_map(size, 2, 20)
+
+fig, axes = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size.inches(8, 4)
+
+axes[0].imshow(temperature_map, cmap="rainbow")
+axes[0].set.title("Temperature Map")
+
+axes[1].imshow(precipitation_map, cmap="Y1GnBu")
+axes[1].set_title("Precipitation Map")
