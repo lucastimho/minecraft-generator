@@ -407,3 +407,17 @@ ax[0].set_title("Biomes")
 
 ax[1].imshow(biome_height_map)
 ax[1].set_title("Biomes with normal")
+
+height_map = noise_map(size, 4, 0, octaves=6, persistence=0.5, lacunarity=2)
+smooth_height_map = noise_map(
+    size, 4, 0, octaves=1, persistence=0.5, lacunarity=2)
+
+fig, ax = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(10, 5)
+
+ax[0].imshow(height_map, cmap="gray")
+ax[0].set_title("Height Map")
+
+ax[1].imshow(smooth_height_map, cmap="gray")
+ax[1].set_title("Smooth Height Map")
