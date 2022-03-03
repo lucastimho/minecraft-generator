@@ -1,3 +1,4 @@
+from scipy.interpolate import interp1d
 from scipy import ndimage
 from skimage import exposure
 from scipy.special import expit
@@ -421,3 +422,27 @@ ax[0].set_title("Height Map")
 
 ax[1].imshow(smooth_height_map, cmap="gray")
 ax[1].set_title("Smooth Height Map")
+
+
+def bezier(x1, y1, x2, y2, a):
+    p1 = np.array([0, 0])
+    p2 = np.array([x1, y1])
+    p3 = np.array([x2, y2])
+    p4 = np.array([1, a])
+
+    return lambda t: ((1-t)**3 * p1 + 3*(1-t)**2*2*t * p2 + 3*(1-t)*t*t**2 * p3 + t**3 * p4)
+
+
+def bezier_lut(x1, y1, x2, y2, a):
+    t = np.linspace(0, 1, 256)
+    f = bezier(x1, y1, x2, y2, a)
+    curve = np.array([f(t_) for t_ in t])
+
+    return interp1d(*curve.T)
+
+
+def filter_map(h_map, smooth_h_map, x1, y1, x2, y2, a, b):
+    f = bezier_lut(x1, y1, x2, y2, a)
+    output_map = b*h_map + (1-b)*smooth_h_map
+    output_map = f(output_map.clip(0, 1))
+    return output_map
