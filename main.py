@@ -490,3 +490,24 @@ biome_masks = biome_masks*blurred_land_mask
 
 plt.figure(dpi=150, figsize=(5, 5))
 plt.imshow(biome_masks[6], cmap="gray")
+
+adjusted_height_map = height_map.copy()
+
+for i in range(len(biome_height_maps)):
+    adjusted_height_map = (
+        1-biome_masks[i]) * adjusted_height_map + biome_masks[i] * biome_height_maps[i]
+
+biome_height_map = apply_height_map(
+    masked_biome_color_map, height_map, height_map, land_mask)
+new_biome_height_map = apply_height_map(
+    masked_biome_color_map, adjusted_height_map, adjusted_height_map, land_mask)
+
+fig, ax = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(10, 5)
+
+ax[0].imshow(adjusted_height_map)
+ax[0].set_title("Before")
+
+ax[1].imshow(new_biome_height_map[0])
+ax[1].set_title("After")
