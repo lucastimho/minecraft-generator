@@ -53,6 +53,29 @@ fig = plt.figure(dpi=150, figsize=(4, 4))
 plt.scatter(*points.T, s=1)
 
 
+def relax(points, size, k=10):
+    new_points = points.copy()
+    for _ in range(k):
+        vor = voronoi(new_points, size)
+        new_points = []
+        for i, region in enumerate(vor.regions):
+            if len(region) == 0 or -1 in region:
+                continue
+            poly = np.array([vor.vertices[i] for i in region])
+            center = poly.mean(axis=0)
+            new_points.append(center)
+        new_points = np.array(new_points).clip(0, size)
+    return new_points
+
+
+points = relax(points, size, k=100)
+vor = voronoi(points, size)
+vor_map = voronoi_map(vor, size)
+
+fig = plt.figure(dpi=150, figsize=(4, 4))
+plt.scatter(*points.T, s=1)
+
+
 def noise_map(size, res, seed, octaves=1, persistence=0.5, lacunarity=2.0):
     scale = size/res
     return np.array([[
