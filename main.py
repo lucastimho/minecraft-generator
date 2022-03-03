@@ -45,3 +45,19 @@ vor_map = voronoi_map(vor, size)
 
 fig = plt.figure(dpi=150, figsize=(4, 4))
 plt.scatter(*points.T, s=1)
+
+
+def noise_map(size, res, seed, octaves=1, persistence=0.5, lacunarity=2.0):
+    scale = size/res
+    return np.array([[
+        snoise3(
+            (x+0.1)/scale,
+            y/scale,
+            seed+map_seed,
+            octaves=octaves,
+            persistence=persistence,
+            lacunarity=lacunarity
+        )
+        for x in range(size)]
+        for y in range(size)
+    ])
