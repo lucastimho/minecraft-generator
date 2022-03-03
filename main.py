@@ -1,3 +1,4 @@
+from scipy import ndimage
 from skimage import exposure
 from scipy.special import expit
 import numpy as np
@@ -278,6 +279,8 @@ fig = plt.figure(dpi=150, figsize=(4, 4))
 plt.imshow(biomes)
 plt.title("Temperature-Precipitation graph")
 
+# Biome Map
+
 n = len(temperature_cells)
 biome_cells = np.zeros(n, dtype=np.uint32)
 
@@ -290,3 +293,117 @@ biome_color_map = color_cells(biome_map, biome_colors)
 
 fig = plt.figure(figsize=(5, 5), dpi=150)
 plt.imshow(biome_color_map)
+
+# Height Map
+
+height_map = noise_map(size, 4, 0, octaves=6, persistence=0.5, lacunarity=2)
+land_mask = height_map > 0
+
+fig = plt.figure(dpi=150, figsize=(5, 5))
+plt.imshow(land_mask, cmap='gray')
+
+sea_color = np.array([12, 14, 255])
+land_mask_color = np.repeat(land_mask[:, :, np.newaxis], 3, axis=-1)
+masked_biome_color_map = land_mask_color + \
+    biome_color_map + (1 - land_mask_color) * sea_color
+
+fig = plt.figure(dpi=150, figsize=(5, 5))
+plt.imshow(masked_biome_color_map)
+
+
+def gradient(im_smooth):
+    gradient_x = im_smooth.astype(float)
+    gradient_y = im_smooth.astype(float)
+
+    kernel = np.arange(-1, 2).astype(float)
+    kernel = - kernel / 2
+
+    gradient_x = ndimage.convolve(gradient_x, kernel[np.newaxis])
+    gradient_y = ndimage.convolve(gradient_y, kernel[np.newaxis].T)
+
+    return gradient_x, gradient_y
+
+
+def sobel(im_smooth):
+    gradient_x = im_smooth.astype(float)
+    gradient_y = im_smooth.astype(float)
+
+    kernel = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+
+    gradient_x = ndimage.convole(gradient_x, kernel)
+    gradient_y = ndimage.convolve(gradient_y, kernel.T)
+
+    return gradient_x, gradient_y
+
+
+def compute_normal_map(gradient_x, gradient_y, intensity=1):
+    width = gradient_x.shape[1]
+    height = gradient_x.shape[0]
+    max_x = np.max(gradient_x)
+    max_y = np.max(gradient_y)
+
+    max_value = max_x
+
+    if max_y > max_x:
+        max_value = max_y
+
+    normal_map = np.zeros((height, width, 3), dtype=np.float32)
+
+    intensity = 1 / intensity
+
+    strength = max_value / (max_value * intensity)
+
+    normal_map[..., 0] = gradient_x / max_value
+    normal_map[..., 1] = gradient_y / max_value
+    normal_map[..., 2] = 1 / strength
+
+    norm = np.sqrt(np.power(normal_map[..., 0], 2) + np.power(
+        normal_map[..., 1], 2) + np.power(normal_map[..., 2], 2))
+
+    normal_map[..., 0] /= norm
+    normal_map[..., 1] /= norm
+    normal_map[..., 2] /= norm
+
+    normal_map *= 0.5
+    normal_map += 0.5
+
+    return normal_map
+
+
+def get_normal_map(im, intensity=1.0):
+    sobel_x, sobel_y = sobel(im)
+    normal_map = compute_normal_map(sobel_x, sobel_y, intensity)
+    return normal_map
+
+
+def get_normal_light(height_map_):
+    normal_map_ = get_normal_map(height_map_)[:, :, 0:2].mean(axis=2)
+    normal_map_ = np.interp(normal_map_, (0, 1), (-1, 1))
+    return normal_map_
+
+
+def apply_height_map(im_map, smooth_map, height_map, land_mask):
+    normal_map = get_normal_light(height_map)
+    normal_map = normal_map*land_mask + smooth_map/2*(~land_mask)
+
+    normal_map = np.interp(normal_map, (-1, 1), (-192, 192))
+
+    normal_map_color = np.repeate(normal_map[:, :, np.newaxis], 3, axis=-1)
+    normal_map_color = normal_map_color.astype(int)
+
+    out_map = im_map + normal_map_color
+    return out_map, normal_map
+
+
+biome_height_map, normal_map = apply_height_map(
+    masked_biome_color_map, height_map, height_map, land_mask)
+
+fig, ax = plt.subplots(1, 2)
+fig.set_dpi(150)
+fig.set_size_inches(10, 5)
+
+ax[0].imshow(masked_biome_color_map)
+ax[0].set_title("Biomes")
+
+ax[1].imshow(biome_height_map)
+ax[1].set_title("Biomes with normal")
