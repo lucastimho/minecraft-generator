@@ -446,3 +446,26 @@ def filter_map(h_map, smooth_h_map, x1, y1, x2, y2, a, b):
     output_map = b*h_map + (1-b)*smooth_h_map
     output_map = f(output_map.clip(0, 1))
     return output_map
+
+
+biome_height_maps = [
+    # desert
+    filter_map(height_map, smooth_height_map, 0.75, 0.2, 0.95, 0.2, 0.2, 0.5),
+    # savanna
+    filter_map(height_map, smooth_height_map, 0.5, 0.1, 0.95, 0.1, 0.1, 0.2),
+    # tropical woodland
+    filter_map(height_map, smooth_height_map,
+               0.33, 0.33, 0.95, 0.1, 0.1, 0.75),
+    # tundra
+    filter_map(height_map, smooth_height_map, 0.5, 1, 0.25, 1, 1, 1),
+    # seasonal forest
+    filter_map(height_map, smooth_height_map, 0.75, 0.5, 0.4, 0.4, 0.33, 0.2),
+    # rainforest
+    filter_map(height_map, smooth_height_map, 0.5, 0.25, 0.66, 1, 1, 0.5),
+    # temperate forest
+    filter_map(height_map, smooth_height_map, 0.75, 0.5, 0.4, 0.4, 0.33, 0.33),
+    # temperate rainforest
+    filter_map(height_map, smooth_height_map, 0.75, 0.5, 0.4, 0.4, 0.33, 0.33),
+    # boreal
+    filter_map(height_map, smooth_height_map, 0.8, 0.1, 0.9, 0.05, 0.05, 0.1)
+]
