@@ -595,3 +595,54 @@ def generate_trees(n):
     trees = relax(trees, size, k=10).astype(np.uint32)
     treees = filter_inbox(trees)
     return trees
+
+
+low_density_trees = generate_trees(1000)
+medium_density_trees = generate_trees(5000)
+high_density_trees = generate_trees(25000)
+
+plt.figure(dpi=150, figsize=(10, 3))
+plt.subplot(131)
+plt.scatter(*low_density_trees.T, s=1)
+plt.title("Low Density Trees")
+plt.xlim(0, 256)
+plt.ylim(0, 256)
+
+plt.subplot(132)
+plt.scatter(*medium_density_trees.T, s=1)
+plt.title("Medium Density Trees")
+plt.xlim(0, 256)
+plt.ylim(0, 256)
+
+plt.subplot(133)
+plt.scatter(*high_density_trees.T, s=1)
+plt.title("High Density Trees")
+plt.xlim(0, 256)
+plt.ylim(0, 256)
+
+
+def place_trees(n, mask, a=0.5):
+    trees = generate_trees(n)
+    rr, cc = trees.T
+
+    output_trees = np.zeros((size, size), dtype=bool)
+    output_trees[rr, cc] = True
+    output_trees = output_trees * \
+        (mask > a)*river_land_mask*(adjusted_height_river_map < 0.5)
+
+    output_trees = np.array(np.where(output_trees == 1))[::-1].T
+    return output_trees
+
+
+tree_densities = [4000, 1500, 8000, 1000, 10000, 25000, 10000, 20000, 5000]
+trees = [np.array(place_trees(tree_densities[i], biome_masks[i]))
+         for i in range(len(biome_names))]
+
+color_map = apply_height_map(
+    rivers_biome_color_map, adjusted_height_river_map, adjusted_height_river_map, river_land_mask)
+
+plt.figure(dpi=150, figsize=(5, 5))
+for k in range(len(biome_names)):
+    plt.scatter(*trees[k].T, s=0.15, c="red")
+
+plt.imshow(color_map[0])
