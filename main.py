@@ -241,3 +241,39 @@ precipitation_cells = quantize_precipitation_cells
 
 temperature_map = quantize_temperature_map
 precipitation_map = quantize_precipitation_map
+
+im = np.array(Image.open("output/TP_map.png"))[:, :, :3]
+biomes = np.zeros((256, 256))
+
+biome_names = [
+    "desert",
+    "savanna",
+    "tropical_woodland",
+    "tundra",
+    "seasonal_forest",
+    "rainforest",
+    "temperate_forest",
+    "temperate_rainforest",
+    "boreal_forest"
+]
+biome_colors = [
+    [255, 255, 178],
+    [184, 200, 98],
+    [188, 161, 53],
+    [190, 255, 242],
+    [106, 144, 38],
+    [33, 77, 41],
+    [86, 179, 106],
+    [34, 61, 53],
+    [35, 114, 94]
+]
+
+for i, color in enumerate(biome_colors):
+    indices = np.where(np.all(im == color, axis=-1))
+    biomes[indices] = i
+
+biomes = np.flip(biomes, axis=0).T
+
+fig = plt.figure(dpi=150, figsize=(4, 4))
+plt.imshow(biomes)
+plt.title("Temperature-Precipitation graph")
