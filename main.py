@@ -221,3 +221,23 @@ ax[0].set_title("Temperature")
 
 ax[1].imshow(precipitation_map, cmap="Blues")
 ax[1].set_title("Precipitation")
+
+
+def quantize(data, n):
+    bins = np.linspace(-1, 1, n+1)
+    return (np.digitize(data, bins) - 1).clip(0, n-1)
+
+
+n = 256
+
+quantize_temperature_cells = quantize(temperature_cells, n)
+quantize_precipitation_cells = quantize(precipitation_cells, n)
+
+quantize_temperature_map = fill_cells(vor_map, quantize_temperature_cells)
+quantize_precipitation_map = fill_cells(vor_map, quantize_precipitation_cells)
+
+temperature_cells = quantize_temperature_cells
+precipitation_cells = quantize_precipitation_cells
+
+temperature_map = quantize_temperature_map
+precipitation_map = quantize_precipitation_map
