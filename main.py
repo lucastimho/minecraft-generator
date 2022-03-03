@@ -560,3 +560,15 @@ rivers_biome_color_map = land_mask_color * \
 
 plt.figure(dpi=150, figsize=(5, 5))
 plt.imshow(rivers_biome_color_map)
+
+
+def filter_inbox(pts):
+    inidx = np.all(pts < size, axis=1)
+    return pts[inidx]
+
+
+def generate_trees(n):
+    trees = np.random.randint(0, size-1, (n, 2))
+    trees = relax(trees, size, k=10).astype(np.uint32)
+    treees = filter_inbox(trees)
+    return trees
